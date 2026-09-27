@@ -74,5 +74,9 @@
 	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>需要访问您的相册以便将专注力成就海报保存到系统相册中</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要访问您的相册以便将专注力成就海报保存到系统相册中</string>
 </dict>
 </plist>

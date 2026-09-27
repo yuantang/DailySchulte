@@ -42,8 +42,8 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
   const [theme, setTheme] = useState<PosterTheme>('obsidian');
   const [isExporting, setIsExporting] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const assessment = getPerformanceAssessment(record);
 
   const timeSeconds = (record.totalTimeMs / 1000).toFixed(2);
@@ -56,11 +56,10 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
   };
 
   /**
-   * High-resolution HTML5 Canvas Drawing function (1080x1520)
+   * High-resolution HTML5 Canvas Drawing function (1080x1520) - Offscreen
    */
   const drawPosterOnCanvas = async (): Promise<HTMLCanvasElement | null> => {
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
+    const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
@@ -69,18 +68,27 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
     canvas.width = width;
     canvas.height = height;
 
-    // Preload App Icon for high-res canvas drawing
+    // Preload App Icon for high-res canvas drawing with safe timeout fallback
     let appIconImg: HTMLImageElement | null = null;
     try {
-      appIconImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+      appIconImg = await new Promise<HTMLImageElement | null>((resolve) => {
         const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = reject;
+        const timer = setTimeout(() => {
+          console.warn('Poster icon load timeout, fallback to text logo');
+          resolve(null);
+        }, 1000);
+        img.onload = () => {
+          clearTimeout(timer);
+          resolve(img);
+        };
+        img.onerror = () => {
+          clearTimeout(timer);
+          resolve(null);
+        };
         img.src = appIconUrl;
       });
-    } catch (e) {
-      console.warn('Poster icon load fallback', e);
+    } catch {
+      appIconImg = null;
     }
 
     // 1. Background Theme styling
@@ -404,52 +412,61 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
     return saved.uri;
   };
 
-  // Handle Download Image (PNG)
+  // Handle Download Image (PNG) / Save to Photos
   const handleDownload = async () => {
     try {
       setIsExporting(true);
+      showToast('正在生成超清海报...');
       const canvas = await drawPosterOnCanvas();
-      if (!canvas) throw new Error('Canvas not found');
+      if (!canvas) throw new Error('海报绘制失败');
 
       // Native iOS Capacitor: write to cache and invoke native sheet with "Save Image" action
       if (Capacitor.isNativePlatform()) {
         try {
           const fileUri = await saveCanvasToLocalFile(canvas);
+          showToast('请在弹出菜单中点击【存储图像】保存至相册！');
           await Share.share({
             title: '保存海报至相册',
             files: [fileUri],
-            dialogTitle: '保存海报或发送',
+            dialogTitle: '保存海报至相册',
           });
-          showToast('请在弹出菜单中点击【存储图像】保存至相册！');
-        } catch {
-          // User dismissed share sheet
+        } catch (shareErr: any) {
+          console.warn('Native share/save notice:', shareErr);
+          const msg = String(shareErr?.message || shareErr || '');
+          if (msg.includes('canceled') || msg.includes('dismissed') || msg.includes('cancelled')) {
+            // User closed the share menu naturally
+          } else {
+            // Fallback: display high-res image preview so user can long-press to save directly
+            const dataUrl = canvas.toDataURL('image/png');
+            setPreviewImageUrl(dataUrl);
+            showToast('已开启大图，长按海报可直接【存储图像】');
+          }
         } finally {
           setIsExporting(false);
         }
         return;
       }
 
-      // Web Fallback: Blob URL download
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          setIsExporting(false);
-          return;
-        }
-        const url = URL.createObjectURL(blob);
+      // Web Fallback
+      const dataUrl = canvas.toDataURL('image/png');
+      const isMobileWeb = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobileWeb) {
+        setPreviewImageUrl(dataUrl);
+        showToast('长按下方海报即可直接【存储图像】到相册！');
+      } else {
         const a = document.createElement('a');
-        a.href = url;
+        a.href = dataUrl;
         a.download = `schulte-achievement-${timeSeconds}s-${record.id.slice(-6)}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        setIsExporting(false);
         showToast('海报图片已下载保存！');
-      }, 'image/png');
+      }
     } catch (err) {
       console.error('handleDownload error:', err);
+      showToast('海报生成异常，请重试');
+    } finally {
       setIsExporting(false);
-      showToast('海报保存失败，请重试');
     }
   };
 
@@ -458,7 +475,7 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
     try {
       setIsExporting(true);
       const canvas = await drawPosterOnCanvas();
-      if (!canvas) throw new Error('Canvas not found');
+      if (!canvas) throw new Error('海报绘制失败');
 
       canvas.toBlob(async (blob) => {
         if (!blob) {
@@ -490,8 +507,9 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
   const handleShare = async () => {
     try {
       setIsExporting(true);
+      showToast('正在准备分享海报...');
       const canvas = await drawPosterOnCanvas();
-      if (!canvas) throw new Error('Canvas not found');
+      if (!canvas) throw new Error('海报绘制失败');
 
       const title = `舒尔特专注力战报 · ${timeSeconds}秒`;
       const text = `我刚在「每日舒尔特」中以 ${timeSeconds} 秒完成了 ${record.size}×${record.size} 挑战，综合评级：${assessment.tier}！一起来测测你的注意力与视野广度！`;
@@ -506,8 +524,16 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             files: [fileUri],
             dialogTitle: '分享战报到…',
           });
-        } catch {
-          // If user cancelled, just stop exporting
+        } catch (shareErr: any) {
+          console.warn('Native share notice:', shareErr);
+          const msg = String(shareErr?.message || shareErr || '');
+          if (msg.includes('canceled') || msg.includes('dismissed') || msg.includes('cancelled')) {
+            // Dismissed by user
+          } else {
+            const dataUrl = canvas.toDataURL('image/png');
+            setPreviewImageUrl(dataUrl);
+            showToast('已开启大图，长按海报可直接保存或发送');
+          }
         } finally {
           setIsExporting(false);
         }
@@ -550,8 +576,57 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-5 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
       onClick={onClose}
     >
-      {/* Hidden offscreen canvas for rendering */}
-      <canvas ref={canvasRef} className="hidden" />
+      {/* High-res Image Preview Modal Fallback (for direct Long-Press Saving to Photos) */}
+      {previewImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in"
+          onClick={() => setPreviewImageUrl(null)}
+        >
+          <div
+            className="bg-slate-900 rounded-3xl p-4 max-w-[340px] w-full flex flex-col items-center space-y-3 shadow-2xl border border-white/10 my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between w-full pb-2 border-b border-white/10">
+              <div className="text-white text-sm font-bold flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>长按图片保存相册</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewImageUrl(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="w-full max-h-[58vh] overflow-y-auto rounded-xl flex justify-center bg-black/50 p-2">
+              <img
+                src={previewImageUrl}
+                alt="舒尔特成就海报"
+                className="max-h-[54vh] object-contain rounded-lg shadow-lg select-auto"
+              />
+            </div>
+
+            <div className="w-full text-center space-y-1">
+              <p className="text-xs font-semibold text-amber-400">
+                👉 长按上方海报，选择【存储图像】即可存入相册
+              </p>
+              <p className="text-[11px] text-slate-400">
+                保存成功后，可点击下方按钮关闭
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setPreviewImageUrl(null)}
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs cursor-pointer shadow-xs transition-colors"
+            >
+              完成
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal Dialog (Click stopped to prevent backdrop dismissal) */}
       <div

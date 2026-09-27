@@ -8,9 +8,12 @@ dist/
 site/dist/
 web/dist/
 build/
+ios/App/build/
+ios/App/build_device/
 .schulte-dist/
 www/
 .build/
+.asc/
 
 # Testing & Coverage
 coverage/
@@ -35,5 +38,6 @@ ios/DerivedData/
 .env*
 !.env.example
 
-# Marketing heavy assets (large video/raw frames)
-marketing/
+# Promo editor build output and export zips (source stays tracked, same as 腕温周期)
+marketing/promo/.next/
+marketing/promo/exports/*.zip

@@ -1903,7 +1903,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[65px]">平均间隔</th>
                         <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[60px]">准确率</th>
                         <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[70px]">专注得分</th>
-                        <th className="py-2.5 px-2.5 whitespace-nowrap font-medium text-[11px] text-right w-[100px]">操作</th>
+                        <th className="py-2.5 px-2.5 whitespace-nowrap font-medium text-[11px] text-right w-[100px] sticky right-0 bg-slate-50/95 backdrop-blur-xs shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.06)] z-10">操作</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -1943,7 +1943,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                                 {s.metrics.overallScore}分
                               </span>
                             </td>
-                            <td className="py-2.5 px-2.5 whitespace-nowrap text-right">
+                            <td className="py-2.5 px-2.5 whitespace-nowrap text-right sticky right-0 bg-white/95 backdrop-blur-xs shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.06)] z-10">
                               <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                                 <button
                                   type="button"

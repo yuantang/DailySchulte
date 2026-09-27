@@ -8,5 +8,5 @@ export const APP_CONFIG = {
   contactEmail: 'moreless1025@gmail.com',
   githubUrl: 'https://github.com/yuantang/DailySchulte',
   appStoreUrl: 'https://apps.apple.com/app/id6742562410', // 预留线上 App ID 占位
-  siteUrl: 'https://dailyschulte.vercel.app',
+  siteUrl: 'https://dailyschulte.1024ideas.com',
 };

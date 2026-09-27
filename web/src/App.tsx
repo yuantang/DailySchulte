@@ -521,13 +521,7 @@ export default function App() {
   }, [mode]);
 
   return (
-    <div
-      className={`w-full bg-slate-100/70 text-slate-800 flex flex-col font-sans antialiased selection:bg-amber-200 ${
-        activeTab === 'training'
-          ? 'h-[100dvh] max-h-[100dvh] overflow-hidden'
-          : 'min-h-screen'
-      }`}
-    >
+    <div className="w-full h-[100dvh] max-h-[100dvh] overflow-hidden bg-slate-100/70 text-slate-800 flex flex-col font-sans antialiased selection:bg-amber-200">
       {/* 1. Universal Top Header */}
       <Header
         activeTab={activeTab}
@@ -540,27 +534,23 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      {/* 2. Main Body Container */}
-      <main
-        className={`flex-1 w-full max-w-7xl mx-auto px-2 sm:px-3 pt-1 pb-0 transition-all flex flex-col min-h-0 ${
-          activeTab === 'training'
-            ? 'overflow-hidden'
-            : 'pb-32 overflow-y-auto'
-        }`}
-      >
-        {activeTab === 'training' && (
-          <div
-            className={`w-full h-full flex-1 flex flex-col items-center max-w-[min(98vw,520px)] mx-auto min-h-0 ${
-              isPlaying
-                ? 'justify-start pt-1 gap-2.5 sm:gap-3'
-                : 'justify-between gap-2.5 sm:gap-3'
-            }`}
-            style={{
-              paddingBottom: isTrainingActive
-                ? 'env(safe-area-inset-bottom, 16px)'
-                : 'calc(var(--tab-bar-clearance, 80px) + 8px)',
-            }}
-          >
+      {/* 2. Main Body Container (全屏高度严格锁定，各 Tab 独立滚动与保活) */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-3 pt-1 pb-0 flex flex-col min-h-0 overflow-hidden relative">
+        {/* 1. 训练主页面 (KeepAlive 保活机制：常驻 DOM，杜绝切回首页重新加载与缩放动画) */}
+        <div
+          className={`w-full h-full flex-1 flex-col items-center max-w-[min(98vw,520px)] mx-auto min-h-0 ${
+            activeTab === 'training' ? 'flex' : 'hidden'
+          } ${
+            isPlaying
+              ? 'justify-start pt-1 gap-2.5 sm:gap-3'
+              : 'justify-between gap-2.5 sm:gap-3'
+          }`}
+          style={{
+            paddingBottom: isTrainingActive
+              ? 'env(safe-area-inset-bottom, 16px)'
+              : 'calc(var(--tab-bar-clearance, 80px) + 8px)',
+          }}
+        >
             {/* Top: Active Plan Banner & Target Prompt Bar */}
             <div className="w-full shrink-0 space-y-1">
               {activePlanInfo && !isPlaying && (
@@ -736,10 +726,13 @@ export default function App() {
               />
             </div>
           </div>
-        )}
 
-        {/* 2. Daily Check-in Full View Tab */}
-        {activeTab === 'daily' && (
+        {/* 2. Daily Check-in Full View Tab (独立滚动，保留打卡状态) */}
+        <div
+          className={`w-full h-full flex-1 overflow-y-auto overscroll-y-contain ${
+            activeTab === 'daily' ? 'block' : 'hidden'
+          }`}
+        >
           <div className="w-full" style={{ paddingBottom: 'calc(var(--tab-bar-clearance, 80px) + 24px)' }}>
             <DailyCheckInView
               streakData={streakData}
@@ -752,10 +745,14 @@ export default function App() {
               reminderConfig={settings.reminder}
             />
           </div>
-        )}
+        </div>
 
-        {/* 3. Specialized Training Plans Tab */}
-        {activeTab === 'plans' && (
+        {/* 3. Specialized Training Plans Tab (独立滚动，保留方案浏览进度) */}
+        <div
+          className={`w-full h-full flex-1 overflow-y-auto overscroll-y-contain ${
+            activeTab === 'plans' ? 'block' : 'hidden'
+          }`}
+        >
           <div className="w-full" style={{ paddingBottom: 'calc(var(--tab-bar-clearance, 80px) + 24px)' }}>
             <TrainingPlansView
               onSelectPlan={(planConfig) => {
@@ -789,10 +786,14 @@ export default function App() {
               }
             />
           </div>
-        )}
+        </div>
 
-        {/* 4. Graphical Cognitive Analytics Dashboard Tab */}
-        {activeTab === 'analytics' && (
+        {/* 4. Graphical Cognitive Analytics Dashboard Tab (独立滚动，图表保活防重绘) */}
+        <div
+          className={`w-full h-full flex-1 overflow-y-auto overscroll-y-contain ${
+            activeTab === 'analytics' ? 'block' : 'hidden'
+          }`}
+        >
           <div className="w-full" style={{ paddingBottom: 'calc(var(--tab-bar-clearance, 80px) + 24px)' }}>
             <AnalyticsDashboard
               sessions={sessions}
@@ -804,7 +805,7 @@ export default function App() {
               initialSelectedSessionId={inspectSessionId}
             />
           </div>
-        )}
+        </div>
       </main>
 
       {/* 3. Mobile Fixed Bottom Navigation Bar (Hidden when iOS 26+ Native Liquid Glass is active) */}

@@ -20,7 +20,27 @@
    - **Framework Preset**: `Vite`
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
-6. 点击 **「Deploy」** 按钮，等待 30 秒即可构建完成并获得专属的上线域名（如 `https://daily-schulte.vercel.app`）！
+6. 点击 **「Deploy」** 按钮，等待 30 秒即可构建完成！
+
+---
+
+### 🌐 绑定独立域名 `dailyschulte.1024ideas.com` 指南
+
+本项目正式生产域名为：**`https://dailyschulte.1024ideas.com`**
+
+在 Vercel 部署完成后，按如下两步即可完成独立域名解析与 HTTPS 证书生效：
+
+1. **在 Vercel 中添加域名**：
+   - 进入 Vercel 项目控制台，进入 **「Settings」->「Domains」**。
+   - 输入：`dailyschulte.1024ideas.com`，点击 **「Add」**。
+
+2. **在您的 DNS 解析服务商（如 Cloudflare、阿里云或腾讯云）配置解析记录**：
+   - **记录类型 (Type)**：`CNAME`
+   - **主机记录 (Name/Host)**：`dailyschulte`
+   - **记录值 (Value/Target)**：`cname.vercel-dns.com`
+   - **TTL**：默认或自动即可。
+
+配置后通常在 1~5 分钟内生效，Vercel 会自动签发受信任的 SSL/TLS HTTPS 证书。
 
 ---
 

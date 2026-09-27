@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import appIconUrl from '../assets/app-icon.png';
 
-export const OFFICIAL_SITE_URL = 'https://dailyschulte.vercel.app';
+export const OFFICIAL_SITE_URL = 'https://dailyschulte.1024ideas.com';
 
 export type SettingsDetailType = 'privacy' | 'terms' | 'about' | 'feedback' | 'rating' | null;
 

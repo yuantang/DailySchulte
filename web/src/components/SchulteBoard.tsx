@@ -324,7 +324,7 @@ export const SchulteBoard: React.FC<SchulteBoardProps> = ({
           maxHeight: '100%',
           aspectRatio: '1 / 1',
         }}
-        className={`relative mx-auto bg-slate-900/5 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden select-none transition-all duration-150 ${
+        className={`relative mx-auto bg-slate-900/5 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden select-none ${
           isPlaying ? 'touch-none overscroll-none' : 'touch-pan-y'
         }`}
       >

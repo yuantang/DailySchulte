@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Menu, X, ArrowRight, ShieldCheck, FileText, HelpCircle, Sparkles } from 'lucide-react';
 import { RoutePath } from '../types';
 import { APP_CONFIG } from '../utils/constants';
+import appIconUrl from '../assets/app-icon.png';
 
 interface NavbarProps {
   currentPath: RoutePath;
@@ -33,17 +34,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
             onClick={() => handleNavClick('/')}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-amber-500/10"></div>
-                <div className="grid grid-cols-2 gap-1 p-1.5">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-amber-400/90"></div>
-                  <div className="w-2.5 h-2.5 rounded-sm bg-amber-500/50"></div>
-                  <div className="w-2.5 h-2.5 rounded-sm bg-amber-500/50"></div>
-                  <div className="w-2.5 h-2.5 rounded-sm bg-amber-400"></div>
-                </div>
-              </div>
-            </div>
+            <img
+              src={appIconUrl}
+              alt="每日舒尔特"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-[22%] object-cover shadow-lg shadow-amber-500/15 border border-amber-500/20 group-hover:scale-105 transition-transform shrink-0"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-black tracking-tight text-white group-hover:text-amber-400 transition-colors">

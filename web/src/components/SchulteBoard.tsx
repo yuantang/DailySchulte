@@ -37,8 +37,8 @@ export const SchulteBoard: React.FC<SchulteBoardProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [boardSizePx, setBoardSizePx] = useState<number>(() => {
     if (typeof window !== 'undefined') {
-      const availW = window.innerWidth - 20;
-      const availH = window.innerHeight - 380;
+      const availW = window.innerWidth - 16;
+      const availH = window.innerHeight - 360;
       return Math.floor(Math.max(220, Math.min(availW, availH, 460)));
     }
     return 360;

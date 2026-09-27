@@ -536,7 +536,7 @@ export default function App() {
 
       {/* 2. Main Body Container */}
       <main
-        className={`flex-1 w-full max-w-7xl mx-auto px-2 sm:px-4 py-1 sm:py-1.5 transition-all flex flex-col min-h-0 ${
+        className={`flex-1 w-full max-w-7xl mx-auto px-2 sm:px-3 pt-1 pb-0 transition-all flex flex-col min-h-0 ${
           activeTab === 'training'
             ? 'overflow-hidden'
             : 'pb-32 overflow-y-auto'
@@ -546,13 +546,13 @@ export default function App() {
           <div
             className={`w-full h-full flex-1 flex flex-col items-center max-w-[min(98vw,520px)] mx-auto min-h-0 ${
               isPlaying
-                ? 'justify-start pt-1 sm:pt-1.5 gap-2 sm:gap-2.5'
-                : 'justify-between py-1'
+                ? 'justify-start pt-1 gap-2.5 sm:gap-3'
+                : 'justify-between gap-3 sm:gap-3.5'
             }`}
             style={{
               paddingBottom: isTrainingActive
                 ? 'env(safe-area-inset-bottom, 16px)'
-                : 'var(--tab-bar-clearance, 80px)',
+                : 'calc(var(--tab-bar-clearance, 80px) + 2px)',
             }}
           >
             {/* Top: Active Plan Banner & Target Prompt Bar */}
@@ -660,7 +660,7 @@ export default function App() {
               className={`w-full min-w-0 flex items-center justify-center overflow-hidden ${
                 isPlaying
                   ? 'h-auto shrink-0 p-0.5'
-                  : 'flex-1 min-h-0 py-1 sm:py-1.5 px-0.5'
+                  : 'flex-1 min-h-0'
               }`}
             >
               <SchulteBoard
@@ -682,11 +682,7 @@ export default function App() {
             </div>
 
             {/* Bottom: GameControls (Start Training is right above Tab Bar!) */}
-            <div
-              className={`w-full shrink-0 ${
-                isPlaying ? 'pt-0' : 'pt-2 sm:pt-2.5'
-              }`}
-            >
+            <div className="w-full shrink-0">
               <GameControls
                 size={size}
                 onSizeChange={(newSize) => {

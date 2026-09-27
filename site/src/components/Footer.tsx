@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Check, Copy, Shield, FileText, Heart, Github, ExternalLink } from 'lucide-react';
 import { RoutePath } from '../types';
 import { APP_CONFIG } from '../utils/constants';
+import appIconUrl from '../assets/app-icon.png';
 
 interface FooterProps {
   onNavigate: (path: RoutePath) => void;
@@ -28,9 +29,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Brand info */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 font-black text-sm">
-                舒
-              </div>
+              <img
+                src={appIconUrl}
+                alt="每日舒尔特"
+                width={36}
+                height={36}
+                className="w-9 h-9 rounded-[22%] object-cover shadow-sm border border-slate-800 shrink-0"
+              />
               <span className="text-lg font-black text-white">{APP_CONFIG.name}</span>
               <span className="text-xs font-mono text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
                 v{APP_CONFIG.version}

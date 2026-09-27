@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { InteractiveDemo } from '../components/InteractiveDemo';
 import { APP_CONFIG } from '../utils/constants';
+import appIconUrl from '../assets/app-icon.png';
 
 export const HomePage: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -327,9 +328,13 @@ export const HomePage: React.FC = () => {
       {/* 6. Bottom CTA */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-12">
         <div className="bg-gradient-to-r from-amber-600/30 via-slate-900 to-amber-600/20 border border-amber-500/30 rounded-3xl p-8 sm:p-12 text-center space-y-6 relative overflow-hidden shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 mx-auto flex items-center justify-center font-black text-2xl shadow-lg shadow-amber-500/20">
-            舒
-          </div>
+          <img
+            src={appIconUrl}
+            alt="每日舒尔特"
+            width={64}
+            height={64}
+            className="w-16 h-16 rounded-[22%] object-cover shadow-2xl shadow-amber-500/30 border border-amber-500/30 mx-auto"
+          />
           <div className="space-y-2 max-w-xl mx-auto">
             <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
               找回您的心流专注力

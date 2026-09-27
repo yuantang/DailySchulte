@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ajuarezso/capacitor-liquid-glass": "^0.8.0",
+    "@capacitor-community/in-app-review": "^8.0.0",
     "@capacitor/core": "^8.5.2",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/local-notifications": "^8.3.1",

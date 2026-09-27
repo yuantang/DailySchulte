@@ -21,9 +21,12 @@ import {
   ExternalLink,
   Globe,
 } from 'lucide-react';
+import { InAppReview } from '@capacitor-community/in-app-review';
 import appIconUrl from '../assets/app-icon.png';
 
 export const OFFICIAL_SITE_URL = 'https://dailyschulte.1024ideas.com';
+export const APP_STORE_ID = '6816681274';
+export const APP_STORE_REVIEW_URL = `https://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`;
 
 export type SettingsDetailType = 'privacy' | 'terms' | 'about' | 'feedback' | 'rating' | null;
 
@@ -59,9 +62,16 @@ export const SettingsDetailModal: React.FC<SettingsDetailModalProps> = ({ type, 
     }, 1800);
   };
 
-  const handleRating = (stars: number) => {
+  const handleRating = async (stars: number) => {
     setRatingStars(stars);
     setRatingSubmitted(true);
+    if (stars >= 4) {
+      try {
+        await InAppReview.requestReview();
+      } catch (err) {
+        console.warn('InAppReview.requestReview failed:', err);
+      }
+    }
   };
 
   return (
@@ -463,29 +473,63 @@ export const SettingsDetailModal: React.FC<SettingsDetailModalProps> = ({ type, 
               </div>
 
               {ratingSubmitted && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-900 space-y-1 animate-in zoom-in-95 duration-200">
-                  <div className="font-bold flex items-center justify-center gap-1">
-                    <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-                    <span>感谢您点亮的 {ratingStars} 星好评！</span>
+                <div
+                  className={`border rounded-2xl p-3 text-xs space-y-2 animate-in zoom-in-95 duration-200 ${
+                    ratingStars >= 4
+                      ? 'bg-amber-50/90 border-amber-200 text-amber-900'
+                      : 'bg-slate-50 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  <div className="font-bold flex items-center justify-center gap-1.5">
+                    {ratingStars >= 4 ? (
+                      <>
+                        <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+                        <span>感谢您点亮的 {ratingStars} 星好评！</span>
+                      </>
+                    ) : (
+                      <>
+                        <Info className="w-3.5 h-3.5 text-slate-500" />
+                        <span>收到您的 {ratingStars} 星反馈</span>
+                      </>
+                    )}
                   </div>
-                  <p className="text-[11px] text-slate-600">
-                    您的认可与温暖支持，是我们坚持打磨高质感、纯粹自律训练体验的最大源泉。
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    {ratingStars >= 4
+                      ? '已为您唤起官方系统评分。若您愿意，也欢迎前往 App Store 为我们撰写详细文字评价！'
+                      : '非常抱歉未达到您的预期。如果您在使用中遇到了卡顿、Bug 或有任何新建议，欢迎向我们反馈，我们会持续改进打磨！'}
                   </p>
+                  {ratingStars >= 4 && (
+                    <a
+                      href={APP_STORE_REVIEW_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] transition-colors shadow-2xs mt-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>前往 App Store 撰写详细好评</span>
+                    </a>
+                  )}
                 </div>
               )}
 
               <div className="pt-2 flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    handleRating(5);
-                    setTimeout(onClose, 1200);
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
+                  onClick={() => handleRating(5)}
+                  className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-bold text-xs transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Star className="w-4 h-4 fill-current" />
                   <span>点亮五星好评并支持 ✨</span>
                 </button>
+                <a
+                  href={APP_STORE_REVIEW_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1 py-1 transition-colors"
+                >
+                  <span>在 App Store 中查看与评价 (ID: {APP_STORE_ID})</span>
+                  <ExternalLink className="w-3 h-3 text-slate-400" />
+                </a>
               </div>
             </div>
           )}

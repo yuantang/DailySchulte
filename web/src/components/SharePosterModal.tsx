@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Download,
   Share2,
@@ -498,39 +499,45 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
+  const modalContent = (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-5 bg-black/65 backdrop-blur-md animate-in fade-in duration-200"
+      onClick={onClose}
+    >
       {/* Hidden offscreen canvas for rendering */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Modal Dialog */}
-      <div className="bg-white rounded-3xl max-w-md w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      {/* Modal Dialog (Click stopped to prevent backdrop dismissal) */}
+      <div
+        className="bg-white rounded-3xl max-w-[350px] w-full max-h-[86vh] flex flex-col shadow-2xl border border-white/30 overflow-hidden my-auto animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-amber-500" />
             <h3 className="font-bold text-sm text-slate-900">专注力成就认证海报</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+            className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Theme Picker */}
-        <div className="px-5 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
+        <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs shrink-0">
           <span className="font-medium text-slate-500 flex items-center gap-1">
             <Palette className="w-3.5 h-3.5" />
-            <span>海报视觉风格:</span>
+            <span>海报风格:</span>
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setTheme('obsidian')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2 py-0.8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 theme === 'obsidian'
                   ? 'bg-slate-900 text-amber-400 ring-2 ring-amber-400/40'
                   : 'bg-white text-slate-600 border border-slate-200'
@@ -541,7 +548,7 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             <button
               type="button"
               onClick={() => setTheme('zen')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2 py-0.8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 theme === 'zen'
                   ? 'bg-stone-200 text-stone-900 ring-2 ring-stone-400'
                   : 'bg-white text-slate-600 border border-slate-200'
@@ -552,7 +559,7 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             <button
               type="button"
               onClick={() => setTheme('gold')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2 py-0.8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 theme === 'gold'
                   ? 'bg-amber-100 text-amber-900 ring-2 ring-amber-400'
                   : 'bg-white text-slate-600 border border-slate-200'
@@ -564,9 +571,9 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
         </div>
 
         {/* Live Poster Card Visual Preview */}
-        <div className="flex-1 overflow-y-auto p-4 flex justify-center bg-slate-100/60">
+        <div className="flex-1 overflow-y-auto p-3 flex justify-center bg-slate-100/50">
           <div
-            className={`w-full max-w-[340px] rounded-3xl p-5 shadow-lg flex flex-col justify-between space-y-4 border transition-all ${
+            className={`w-full max-w-[310px] rounded-2xl p-3.5 shadow-md flex flex-col justify-between space-y-2.5 border transition-all ${
               theme === 'obsidian'
                 ? 'bg-slate-950 text-white border-slate-800'
                 : theme === 'zen'
@@ -575,7 +582,7 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             }`}
           >
             {/* Top Brand */}
-            <div className="flex flex-col items-center space-y-1.5 text-center">
+            <div className="flex flex-col items-center space-y-1 text-center">
               <div className="flex items-center gap-1.5 justify-center">
                 <img
                   src={appIconUrl}
@@ -600,26 +607,26 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             </div>
 
             {/* Hero Number */}
-            <div className="text-center py-2 px-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 space-y-1">
+            <div className="text-center py-1.5 px-3 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 space-y-0.5">
               {isNewBest && (
-                <span className="inline-block text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                <span className="inline-block text-[9px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                   ★ 刷新个人最佳纪录 ★
                 </span>
               )}
-              <div className="text-4xl font-black tracking-tight flex items-baseline justify-center gap-1">
+              <div className="text-3xl font-black tracking-tight flex items-baseline justify-center gap-1">
                 <span>{timeSeconds}</span>
-                <span className="text-sm font-semibold opacity-60">秒</span>
+                <span className="text-xs font-semibold opacity-60">秒</span>
               </div>
               <div className="text-xs font-bold text-amber-500">{assessment.tier}</div>
             </div>
 
             {/* Quick Metrics Grid */}
-            <div className="grid grid-cols-2 gap-2 text-center text-[11px]">
-              <div className="p-2 rounded-xl bg-black/5 dark:bg-white/5">
+            <div className="grid grid-cols-2 gap-1.5 text-center text-[10px]">
+              <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
                 <span className="opacity-60 block text-[9px]">平均单点</span>
                 <span className="font-bold text-xs">{avgTapSeconds}s</span>
               </div>
-              <div className="p-2 rounded-xl bg-black/5 dark:bg-white/5">
+              <div className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5">
                 <span className="opacity-60 block text-[9px]">准确率</span>
                 <span className="font-bold text-xs text-emerald-500">
                   {record.accuracyRate.toFixed(1)}%
@@ -628,17 +635,17 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             </div>
 
             {/* Mini Five-Dimension Bars */}
-            <div className="space-y-1.5 p-3 rounded-xl bg-black/5 dark:bg-white/5 text-[10px]">
-              <div className="font-bold opacity-80 text-[11px] mb-1">五维专注力效能</div>
+            <div className="space-y-1 p-2 rounded-xl bg-black/5 dark:bg-white/5 text-[9px]">
+              <div className="font-bold opacity-80 text-[10px] mb-0.5">五维专注力效能</div>
               {[
                 { name: '反应速度', val: record.metrics.reactionSpeed, col: 'bg-amber-500' },
                 { name: '稳定性', val: record.metrics.attentionStability, col: 'bg-blue-500' },
                 { name: '视野广度', val: record.metrics.visualSpan, col: 'bg-emerald-500' },
                 { name: '准确度', val: record.metrics.accuracy, col: 'bg-pink-500' },
               ].map((m) => (
-                <div key={m.name} className="flex items-center justify-between gap-2">
+                <div key={m.name} className="flex items-center justify-between gap-1.5">
                   <span className="opacity-70 shrink-0">{m.name}</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                  <div className="flex-1 h-1 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
                     <div
                       className={`h-full rounded-full ${m.col}`}
                       style={{ width: `${m.val}%` }}
@@ -656,10 +663,10 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
                 <p>认证时间: {record.dateFormatted}</p>
                 <p>连续专注打卡: {streakCount} 天</p>
               </div>
-              <div className="w-11 h-11 rounded-full border-2 border-amber-500/80 flex flex-col items-center justify-center text-amber-500 text-center leading-none p-0.5">
-                <span className="text-[8px] font-bold tracking-tight">每日舒尔特</span>
-                <span className="text-[7px] font-black scale-90 tracking-widest my-0.5">OFFICIAL</span>
-                <span className="text-[6px] opacity-80">VERIFIED</span>
+              <div className="w-10 h-10 rounded-full border-2 border-amber-500/80 flex flex-col items-center justify-center text-amber-500 text-center leading-none p-0.5">
+                <span className="text-[7px] font-bold tracking-tight">每日舒尔特</span>
+                <span className="text-[6px] font-black scale-90 tracking-widest my-0.5">OFFICIAL</span>
+                <span className="text-[5px] opacity-80">VERIFIED</span>
               </div>
             </div>
           </div>
@@ -667,28 +674,28 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
 
         {/* Toast Feedback */}
         {toastMsg && (
-          <div className="mx-4 mb-2 p-2 rounded-xl bg-slate-900 text-white text-xs text-center font-bold animate-in fade-in duration-150">
+          <div className="mx-4 mb-2 p-1.5 rounded-xl bg-slate-900 text-white text-xs text-center font-bold animate-in fade-in duration-150">
             {toastMsg}
           </div>
         )}
 
         {/* Footer Export Action Buttons */}
-        <div className="p-4 border-t border-slate-100 bg-white flex items-center gap-2">
+        <div className="p-3 border-t border-slate-100 bg-white flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleCopy}
             disabled={isExporting}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
           >
             <Copy className="w-3.5 h-3.5" />
-            <span>复制海报</span>
+            <span>复制</span>
           </button>
 
           <button
             type="button"
             onClick={handleShare}
             disabled={isExporting}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
           >
             <Share2 className="w-3.5 h-3.5" />
             <span>分享</span>
@@ -699,7 +706,7 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             type="button"
             onClick={handleDownload}
             disabled={isExporting}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-xs transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-xs transition-all cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span>{isExporting ? '生成中...' : '保存相册'}</span>
@@ -708,4 +715,6 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

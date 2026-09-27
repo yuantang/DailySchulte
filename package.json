@@ -12,7 +12,8 @@
     "run:fresh": "node scripts/run-fresh.mjs",
     "dev:server": "npm run dev --prefix web",
     "dev:site": "npm run dev --prefix site",
-    "build:site": "npm run build --prefix site"
+    "build:site": "npm run build --prefix site",
+    "dev:promo": "bun run dev --cwd marketing/promo"
   },
   "dependencies": {
     "@ajuarezso/capacitor-liquid-glass": "^0.8.0",

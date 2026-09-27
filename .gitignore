@@ -34,3 +34,6 @@ ios/DerivedData/
 # Environment variables
 .env*
 !.env.example
+
+# Marketing heavy assets (large video/raw frames)
+marketing/

@@ -1,0 +1,627 @@
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Download,
+  Share2,
+  Copy,
+  Check,
+  X,
+  Trophy,
+  Flame,
+  Target,
+  Clock,
+  Sparkles,
+  ShieldCheck,
+  Palette,
+} from 'lucide-react';
+import { SessionRecord } from '../types';
+import { getPerformanceAssessment } from '../utils/analytics';
+import { MODE_NAMES } from './AnalyticsDashboard';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+
+interface SharePosterModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  record: SessionRecord;
+  isNewBest?: boolean;
+  streakCount?: number;
+}
+
+type PosterTheme = 'obsidian' | 'zen' | 'gold';
+
+export const SharePosterModal: React.FC<SharePosterModalProps> = ({
+  isOpen,
+  onClose,
+  record,
+  isNewBest = false,
+  streakCount = 1,
+}) => {
+  const [theme, setTheme] = useState<PosterTheme>('obsidian');
+  const [isExporting, setIsExporting] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const assessment = getPerformanceAssessment(record);
+
+  const timeSeconds = (record.totalTimeMs / 1000).toFixed(2);
+  const avgTapSeconds = (record.averageTapMs / 1000).toFixed(2);
+  const modeName = record.customTitle || MODE_NAMES[record.mode] || record.mode;
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  /**
+   * High-resolution HTML5 Canvas Drawing function (1080x1520)
+   */
+  const drawPosterOnCanvas = async (): Promise<HTMLCanvasElement | null> => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    const width = 1080;
+    const height = 1520;
+    canvas.width = width;
+    canvas.height = height;
+
+    // 1. Background Theme styling
+    if (theme === 'obsidian') {
+      const grad = ctx.createLinearGradient(0, 0, width, height);
+      grad.addColorStop(0, '#090d16');
+      grad.addColorStop(0.5, '#111827');
+      grad.addColorStop(1, '#0b0f19');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Decorative mesh rings
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.08)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(width * 0.85, 200, 320, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(width * 0.15, height * 0.8, 400, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (theme === 'zen') {
+      ctx.fillStyle = '#f8f6f0';
+      ctx.fillRect(0, 0, width, height);
+
+      // Fine border frame
+      ctx.strokeStyle = '#e2ded5';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(36, 36, width - 72, height - 72);
+      ctx.strokeStyle = 'rgba(180, 83, 9, 0.15)';
+      ctx.strokeRect(44, 44, width - 88, height - 88);
+    } else {
+      // Gold theme
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, '#fffbeb');
+      grad.addColorStop(0.4, '#fef3c7');
+      grad.addColorStop(1, '#fde68a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = 'rgba(217, 119, 6, 0.12)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(40, 40, width - 80, height - 80);
+    }
+
+    // Colors according to theme
+    const isDark = theme === 'obsidian';
+    const textPrimary = isDark ? '#ffffff' : theme === 'zen' ? '#1c1917' : '#451a03';
+    const textSecondary = isDark ? '#94a3b8' : theme === 'zen' ? '#78716c' : '#92400e';
+    const accentColor = isDark ? '#f59e0b' : theme === 'zen' ? '#b45309' : '#d97706';
+    const cardBg = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.7)';
+    const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+
+    // 2. Top Header Brand
+    ctx.textAlign = 'center';
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('SCHULTE ATTENTION SYSTEM · 专注力认证报告', width / 2, 110);
+
+    ctx.fillStyle = textSecondary;
+    ctx.font = '22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('视知觉广角扫描与神经注意稳定性认证', width / 2, 148);
+
+    // 3. Session Tag Pill
+    const tagText = `${record.size}×${record.size} 规格 · ${modeName} · ${record.totalTiles} 项任务`;
+    ctx.fillStyle = isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(217, 119, 6, 0.12)';
+    const tagWidth = ctx.measureText(tagText).width + 60;
+    roundRect(ctx, width / 2 - tagWidth / 2, 185, tagWidth, 48, 24);
+    ctx.fill();
+
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(tagText, width / 2, 217);
+
+    // 4. Hero Score Section (Big Card)
+    roundRect(ctx, 80, 270, width - 160, 310, 32);
+    ctx.fillStyle = cardBg;
+    ctx.fill();
+    ctx.strokeStyle = cardBorder;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // PB Badge if applicable
+    if (isNewBest) {
+      ctx.fillStyle = '#10b981';
+      roundRect(ctx, width / 2 - 130, 295, 260, 42, 21);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('★ 刷新个人历史最佳纪录 ★', width / 2, 323);
+    } else {
+      ctx.fillStyle = textSecondary;
+      ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('挑战完成耗时', width / 2, 320);
+    }
+
+    // Huge Time Number
+    ctx.fillStyle = textPrimary;
+    ctx.font = 'bold 118px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`${timeSeconds}`, width / 2 - 25, 450);
+    ctx.fillStyle = textSecondary;
+    ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('秒', width / 2 + (ctx.measureText(timeSeconds).width / 2) + 15, 450);
+
+    // Tier badge
+    const tierText = `${assessment.tier} · ${assessment.summary.slice(0, 16)}`;
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(tierText, width / 2, 520);
+
+    // 5. Four Grid Highlights Cards
+    const metricsY = 620;
+    const boxW = (width - 160 - 36) / 4;
+    const boxH = 150;
+    const boxes = [
+      { label: '平均单点', val: `${avgTapSeconds}s`, color: accentColor },
+      { label: '点击准确率', val: `${record.accuracyRate.toFixed(1)}%`, color: '#10b981' },
+      { label: '失误次数', val: `${record.errorsCount} 次`, color: record.errorsCount === 0 ? '#10b981' : '#ef4444' },
+      { label: '综合专注分', val: `${record.metrics.overallScore} 分`, color: '#8b5cf6' },
+    ];
+
+    boxes.forEach((b, i) => {
+      const bx = 80 + i * (boxW + 12);
+      roundRect(ctx, bx, metricsY, boxW, boxH, 20);
+      ctx.fillStyle = cardBg;
+      ctx.fill();
+      ctx.strokeStyle = cardBorder;
+      ctx.stroke();
+
+      ctx.fillStyle = textSecondary;
+      ctx.font = '20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(b.label, bx + boxW / 2, metricsY + 50);
+
+      ctx.fillStyle = b.color;
+      ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(b.val, bx + boxW / 2, metricsY + 105);
+    });
+
+    // 6. Five-Dimension Radar Bars Card
+    const radarCardY = 810;
+    roundRect(ctx, 80, radarCardY, width - 160, 360, 32);
+    ctx.fillStyle = cardBg;
+    ctx.fill();
+    ctx.strokeStyle = cardBorder;
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = textPrimary;
+    ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('五维专注力神经效能图谱', 120, radarCardY + 55);
+
+    const dims = [
+      { name: '反应速度 (Reaction)', score: record.metrics.reactionSpeed, max: 100, color: '#f59e0b' },
+      { name: '注意力稳定性 (Stability)', score: record.metrics.attentionStability, max: 100, color: '#3b82f6' },
+      { name: '视野广度 (Visual Span)', score: record.metrics.visualSpan, max: 100, color: '#10b981' },
+      { name: '心智耐力 (Endurance)', score: record.metrics.mentalEndurance, max: 100, color: '#8b5cf6' },
+      { name: '辨识准确度 (Accuracy)', score: record.metrics.accuracy, max: 100, color: '#ec4899' },
+    ];
+
+    dims.forEach((d, idx) => {
+      const dy = radarCardY + 95 + idx * 50;
+      // Dim Label
+      ctx.fillStyle = textSecondary;
+      ctx.font = '20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(d.name, 120, dy + 18);
+
+      // Score Text
+      ctx.textAlign = 'right';
+      ctx.fillStyle = textPrimary;
+      ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(`${d.score} 分`, width - 120, dy + 18);
+      ctx.textAlign = 'left';
+
+      // Bar Track
+      const barX = 420;
+      const barW = width - 120 - barX - 100;
+      roundRect(ctx, barX, dy + 4, barW, 16, 8);
+      ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+      ctx.fill();
+
+      // Bar Fill
+      const fillW = Math.max(12, (d.score / 100) * barW);
+      roundRect(ctx, barX, dy + 4, fillW, 16, 8);
+      ctx.fillStyle = d.color;
+      ctx.fill();
+    });
+
+    // 7. Habit & Coach Advice Quote Card
+    const adviceY = 1200;
+    roundRect(ctx, 80, adviceY, width - 160, 150, 24);
+    ctx.fillStyle = isDark ? 'rgba(245, 158, 11, 0.06)' : 'rgba(217, 119, 6, 0.08)';
+    ctx.fill();
+    ctx.strokeStyle = isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(217, 119, 6, 0.3)';
+    ctx.stroke();
+
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`“ 训练诊断与教练建议 ”`, 120, adviceY + 45);
+
+    ctx.fillStyle = textSecondary;
+    ctx.font = '20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const adviceText = assessment.advice.length > 46 ? `${assessment.advice.slice(0, 46)}...` : assessment.advice;
+    ctx.fillText(adviceText, 120, adviceY + 85);
+    ctx.fillText(`🔥 每日专注坚持：已连续训练打卡 ${streakCount} 天`, 120, adviceY + 120);
+
+    // 8. Footer Timestamp & Verification Seal
+    const footerY = 1420;
+    ctx.fillStyle = textSecondary;
+    ctx.font = '19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`认证时间: ${record.dateFormatted}`, 120, footerY);
+    ctx.fillText(`记录编码: ${record.id.slice(0, 18)}`, 120, footerY + 28);
+
+    // Stamp circle on right
+    ctx.textAlign = 'center';
+    const stampX = width - 170;
+    const stampY = footerY + 8;
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(stampX, stampY, 52, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('SCHULTE', stampX, stampY - 14);
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('OFFICIAL', stampX, stampY + 4);
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('VERIFIED', stampX, stampY + 22);
+
+    return canvas;
+  };
+
+  // Helper: Canvas Rounded Rectangle
+  function roundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) {
+    if (typeof (ctx as any).roundRect === 'function') {
+      ctx.beginPath();
+      (ctx as any).roundRect(x, y, w, h, r);
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // Handle Download Image (PNG)
+  const handleDownload = async () => {
+    try {
+      setIsExporting(true);
+      const canvas = await drawPosterOnCanvas();
+      if (!canvas) throw new Error('Canvas not found');
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `schulte-achievement-${timeSeconds}s-${record.id.slice(-6)}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setIsExporting(false);
+        showToast('海报图片已下载保存！');
+      }, 'image/png');
+    } catch {
+      setIsExporting(false);
+      showToast('海报导出失败，请重试');
+    }
+  };
+
+  // Handle Copy to Clipboard
+  const handleCopy = async () => {
+    try {
+      setIsExporting(true);
+      const canvas = await drawPosterOnCanvas();
+      if (!canvas) throw new Error('Canvas not found');
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        try {
+          if (navigator.clipboard && navigator.clipboard.write) {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob }),
+            ]);
+            showToast('海报已复制至剪贴板，可直接粘贴！');
+          } else {
+            handleDownload();
+          }
+        } catch {
+          handleDownload();
+        } finally {
+          setIsExporting(false);
+        }
+      }, 'image/png');
+    } catch {
+      setIsExporting(false);
+      showToast('复制失败，已转为下载模式');
+    }
+  };
+
+  // Handle Native Share
+  const handleShare = async () => {
+    try {
+      setIsExporting(true);
+      const canvas = await drawPosterOnCanvas();
+      if (!canvas) throw new Error('Canvas not found');
+
+      const title = `舒尔特专注力战报 · ${timeSeconds}秒`;
+      const text = `我刚在舒尔特专注力训练中以 ${timeSeconds} 秒完成了 ${record.size}×${record.size} 挑战，评级：${assessment.tier}！一起来测测你的反应速度！`;
+
+      // On native iOS Capacitor, invoke system share sheet directly
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const dataUrl = canvas.toDataURL('image/png');
+          await Share.share({
+            title,
+            text,
+            url: dataUrl,
+            dialogTitle: '分享战报到…',
+          });
+          setIsExporting(false);
+          return;
+        } catch {
+          // If user cancelled, just stop exporting
+          setIsExporting(false);
+          return;
+        }
+      }
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'schulte-poster.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title,
+              text,
+              files: [file],
+            });
+          } catch {
+            // ignore
+          }
+        } else {
+          handleDownload();
+        }
+        setIsExporting(false);
+      }, 'image/png');
+    } catch {
+      setIsExporting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
+      {/* Hidden offscreen canvas for rendering */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      {/* Modal Dialog */}
+      <div className="bg-white rounded-3xl max-w-md w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <h3 className="font-bold text-sm text-slate-900">专注力成就认证海报</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Theme Picker */}
+        <div className="px-5 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
+          <span className="font-medium text-slate-500 flex items-center gap-1">
+            <Palette className="w-3.5 h-3.5" />
+            <span>海报视觉风格:</span>
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setTheme('obsidian')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                theme === 'obsidian'
+                  ? 'bg-slate-900 text-amber-400 ring-2 ring-amber-400/40'
+                  : 'bg-white text-slate-600 border border-slate-200'
+              }`}
+            >
+              曜石黑
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme('zen')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                theme === 'zen'
+                  ? 'bg-stone-200 text-stone-900 ring-2 ring-stone-400'
+                  : 'bg-white text-slate-600 border border-slate-200'
+              }`}
+            >
+              极简白
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme('gold')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                theme === 'gold'
+                  ? 'bg-amber-100 text-amber-900 ring-2 ring-amber-400'
+                  : 'bg-white text-slate-600 border border-slate-200'
+              }`}
+            >
+              辉金版
+            </button>
+          </div>
+        </div>
+
+        {/* Live Poster Card Visual Preview */}
+        <div className="flex-1 overflow-y-auto p-4 flex justify-center bg-slate-100/60">
+          <div
+            className={`w-full max-w-[340px] rounded-3xl p-5 shadow-lg flex flex-col justify-between space-y-4 border transition-all ${
+              theme === 'obsidian'
+                ? 'bg-slate-950 text-white border-slate-800'
+                : theme === 'zen'
+                ? 'bg-[#faf8f5] text-stone-900 border-stone-200'
+                : 'bg-gradient-to-b from-amber-50 via-amber-100/60 to-amber-200/50 text-slate-950 border-amber-200'
+            }`}
+          >
+            {/* Top Brand */}
+            <div className="text-center space-y-1">
+              <span className="text-[10px] font-black tracking-widest uppercase text-amber-500 block">
+                SCHULTE ATTENTION SYSTEM
+              </span>
+              <h4 className="text-xs font-bold opacity-80">专注力训练认证报告</h4>
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                <span>{record.size}×{record.size} 规格</span>
+                <span>·</span>
+                <span>{modeName}</span>
+              </div>
+            </div>
+
+            {/* Hero Number */}
+            <div className="text-center py-2 px-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 space-y-1">
+              {isNewBest && (
+                <span className="inline-block text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                  ★ 刷新个人最佳纪录 ★
+                </span>
+              )}
+              <div className="text-4xl font-black tracking-tight flex items-baseline justify-center gap-1">
+                <span>{timeSeconds}</span>
+                <span className="text-sm font-semibold opacity-60">秒</span>
+              </div>
+              <div className="text-xs font-bold text-amber-500">{assessment.tier}</div>
+            </div>
+
+            {/* Quick Metrics Grid */}
+            <div className="grid grid-cols-2 gap-2 text-center text-[11px]">
+              <div className="p-2 rounded-xl bg-black/5 dark:bg-white/5">
+                <span className="opacity-60 block text-[9px]">平均单点</span>
+                <span className="font-bold text-xs">{avgTapSeconds}s</span>
+              </div>
+              <div className="p-2 rounded-xl bg-black/5 dark:bg-white/5">
+                <span className="opacity-60 block text-[9px]">准确率</span>
+                <span className="font-bold text-xs text-emerald-500">
+                  {record.accuracyRate.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Mini Five-Dimension Bars */}
+            <div className="space-y-1.5 p-3 rounded-xl bg-black/5 dark:bg-white/5 text-[10px]">
+              <div className="font-bold opacity-80 text-[11px] mb-1">五维专注力效能</div>
+              {[
+                { name: '反应速度', val: record.metrics.reactionSpeed, col: 'bg-amber-500' },
+                { name: '稳定性', val: record.metrics.attentionStability, col: 'bg-blue-500' },
+                { name: '视野广度', val: record.metrics.visualSpan, col: 'bg-emerald-500' },
+                { name: '准确度', val: record.metrics.accuracy, col: 'bg-pink-500' },
+              ].map((m) => (
+                <div key={m.name} className="flex items-center justify-between gap-2">
+                  <span className="opacity-70 shrink-0">{m.name}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${m.col}`}
+                      style={{ width: `${m.val}%` }}
+                    />
+                  </div>
+                  <span className="font-mono font-bold shrink-0">{m.val}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer Seal */}
+            <div className="pt-2 border-t border-current/10 flex items-center justify-between text-[9px] opacity-70">
+              <div>
+                <p>认证时间: {record.dateFormatted}</p>
+                <p>连续专注打卡: {streakCount} 天</p>
+              </div>
+              <div className="w-10 h-10 rounded-full border-2 border-amber-500/80 flex items-center justify-center text-[8px] font-black text-amber-500 text-center leading-none">
+                SEAL
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Toast Feedback */}
+        {toastMsg && (
+          <div className="mx-4 mb-2 p-2 rounded-xl bg-slate-900 text-white text-xs text-center font-bold animate-in fade-in duration-150">
+            {toastMsg}
+          </div>
+        )}
+
+        {/* Footer Export Action Buttons */}
+        <div className="p-4 border-t border-slate-100 bg-white flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCopy}
+            disabled={isExporting}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+          >
+            <Copy className="w-3.5 h-3.5" />
+            <span>复制海报</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleShare}
+            disabled={isExporting}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>分享</span>
+          </button>
+
+          <button
+            id="btn-download-share-poster"
+            type="button"
+            onClick={handleDownload}
+            disabled={isExporting}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-xs transition-all cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>{isExporting ? '生成中...' : '保存相册'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+site/node_modules/
+web/node_modules/
+
+# Production builds
+dist/
+site/dist/
+web/dist/
+build/
+.schulte-dist/
+www/
+.build/
+
+# Testing & Coverage
+coverage/
+*.log
+
+# System & IDE files
+.DS_Store
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+*.xcuserdatad
+xcuserdata/
+DerivedData/
+ios/DerivedData/
+.vscode/
+.antigravity/
+
+# Temporary screenshots & testing artifacts in root
+/*.png
+/*.zip
+
+# Environment variables
+.env*
+!.env.example

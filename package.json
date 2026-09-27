@@ -1,0 +1,36 @@
+{
+  "name": "daily-schulte-capacitor",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Capacitor iOS shell for 每日舒尔特",
+  "type": "module",
+  "scripts": {
+    "build:web": "node scripts/prepare-www.mjs",
+    "cap:sync": "npm run build:web && npx cap sync",
+    "cap:ios": "npm run cap:sync && npx cap open ios",
+    "cap:run:ios": "npm run cap:sync && npx cap run ios",
+    "run:fresh": "node scripts/run-fresh.mjs",
+    "dev:server": "npm run dev --prefix web",
+    "dev:site": "npm run dev --prefix site",
+    "build:site": "npm run build --prefix site"
+  },
+  "dependencies": {
+    "@ajuarezso/capacitor-liquid-glass": "^0.8.0",
+    "@capacitor-community/in-app-review": "^8.0.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/device": "^8.0.3",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "esbuild": "^0.25.0",
+    "typescript": "~5.8.2"
+  }
+}

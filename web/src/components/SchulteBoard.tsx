@@ -38,32 +38,30 @@ export const SchulteBoard: React.FC<SchulteBoardProps> = ({
   const [boardSizePx, setBoardSizePx] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const availW = window.innerWidth - 16;
-      const availH = window.innerHeight - 360;
-      return Math.floor(Math.max(220, Math.min(availW, availH, 460)));
+      const availH = window.innerHeight - 440;
+      return Math.floor(Math.max(200, Math.min(availW, availH, 440)));
     }
-    return 360;
+    return 340;
   });
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
     const updateSize = () => {
       if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const w = Math.floor(rect.width);
-      let h = Math.floor(rect.height);
-      if (w > 0) {
-        // 在训练进行中，容器为自适应紧凑包裹，高度受视口安全区限制而非被 flex-1 撑出巨大空洞
-        if (isPlaying || h <= 0) {
-          const maxAvailH = Math.floor(window.innerHeight - 200);
-          h = maxAvailH > 0 ? maxAvailH : w;
-        }
+      const parent = containerRef.current.parentElement;
+      const availW = parent ? Math.floor(parent.clientWidth) : Math.floor(containerRef.current.clientWidth);
+      const availH = parent ? Math.floor(parent.clientHeight) : Math.floor(containerRef.current.clientHeight);
+      if (availW > 0 && availH > 0) {
         // Enforce strict 1:1 square: dimension is strictly identical on both axes
-        const side = Math.min(w, h);
+        const side = Math.min(availW, availH);
         setBoardSizePx((prev) => (Math.abs(prev - side) > 1 ? side : prev));
       }
     };
     updateSize();
     const observer = new ResizeObserver(updateSize);
+    if (containerRef.current.parentElement) {
+      observer.observe(containerRef.current.parentElement);
+    }
     observer.observe(containerRef.current);
     window.addEventListener('resize', updateSize);
     window.addEventListener('orientationchange', updateSize);
@@ -72,7 +70,7 @@ export const SchulteBoard: React.FC<SchulteBoardProps> = ({
       window.removeEventListener('resize', updateSize);
       window.removeEventListener('orientationchange', updateSize);
     };
-  }, []);
+  }, [isPlaying]);
 
   // Dynamic font sizing tuned for small mobile viewports (e.g. 360px - 430px)
   const getFontSizeClass = () => {
@@ -325,9 +323,8 @@ export const SchulteBoard: React.FC<SchulteBoardProps> = ({
           maxWidth: '100%',
           maxHeight: '100%',
           aspectRatio: '1 / 1',
-          flexShrink: 0,
         }}
-        className={`relative mx-auto bg-slate-900/5 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden select-none transition-all duration-300 ${
+        className={`relative mx-auto bg-slate-900/5 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden select-none transition-all duration-150 ${
           isPlaying ? 'touch-none overscroll-none' : 'touch-pan-y'
         }`}
       >

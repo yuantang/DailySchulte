@@ -521,7 +521,13 @@ export default function App() {
   }, [mode]);
 
   return (
-    <div className="min-h-screen bg-slate-100/70 text-slate-800 flex flex-col font-sans antialiased selection:bg-amber-200">
+    <div
+      className={`w-full bg-slate-100/70 text-slate-800 flex flex-col font-sans antialiased selection:bg-amber-200 ${
+        activeTab === 'training'
+          ? 'h-[100dvh] max-h-[100dvh] overflow-hidden'
+          : 'min-h-screen'
+      }`}
+    >
       {/* 1. Universal Top Header */}
       <Header
         activeTab={activeTab}
@@ -547,12 +553,12 @@ export default function App() {
             className={`w-full h-full flex-1 flex flex-col items-center max-w-[min(98vw,520px)] mx-auto min-h-0 ${
               isPlaying
                 ? 'justify-start pt-1 gap-2.5 sm:gap-3'
-                : 'justify-between gap-3 sm:gap-3.5'
+                : 'justify-between gap-2.5 sm:gap-3'
             }`}
             style={{
               paddingBottom: isTrainingActive
                 ? 'env(safe-area-inset-bottom, 16px)'
-                : 'calc(var(--tab-bar-clearance, 80px) + 2px)',
+                : 'calc(var(--tab-bar-clearance, 80px) + 8px)',
             }}
           >
             {/* Top: Active Plan Banner & Target Prompt Bar */}

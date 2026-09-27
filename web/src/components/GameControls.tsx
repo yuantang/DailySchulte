@@ -491,7 +491,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
     MODE_CATEGORIES[0].modes[0];
 
   return (
-    <div className="w-full flex flex-col gap-3 sm:gap-3.5">
+    <div className="w-full flex flex-col gap-2.5 sm:gap-3">
       {/* Custom Deck Active Banner */}
       {mode === 'custom_text' && !isPlaying && (
         <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/60 border border-amber-300 flex items-center justify-between gap-2 text-xs shadow-2xs">
@@ -522,7 +522,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
 
       {/* 1. Uncompressed Dimension Bar: Full-Width Grid Sizes & Dual-Channel Direct Access */}
       {!isPlaying && (
-        <div className="w-full flex flex-col gap-3 sm:gap-3.5">
+        <div className="w-full flex flex-col gap-2.5 sm:gap-3">
           {/* Row 1: Full-Width Grid Sizes Segmented Bar */}
           <div className="w-full bg-slate-200/60 p-1 rounded-xl flex items-center justify-between gap-1 shadow-2xs">
             {SIZES.map((item) => {
@@ -546,7 +546,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
           </div>
 
           {/* Row 2: Dual-Channel Direct Access Cards (Mode & Shape) */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-3.5 w-full">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
             {/* Left Channel: Mode Selector Button */}
             <button
               id="btn-open-mode-drawer"
@@ -555,7 +555,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
                 setIsModeDrawerOpen(true);
                 setIsShapeDrawerOpen(false);
               }}
-              className="flex flex-col items-start p-3 sm:p-3.5 rounded-2xl bg-white hover:bg-amber-50/40 active:scale-98 border border-slate-200 hover:border-amber-400/50 shadow-2xs transition-all touch-manipulation cursor-pointer group text-left relative overflow-hidden"
+              className="flex flex-col items-start p-2.5 sm:p-3 rounded-2xl bg-white hover:bg-amber-50/40 active:scale-98 border border-slate-200 hover:border-amber-400/50 shadow-2xs transition-all touch-manipulation cursor-pointer group text-left relative overflow-hidden"
               title="点击切换训练题型（正序、逆序、红黑表、诗词等）"
             >
               <div className="flex items-center justify-between w-full mb-1">
@@ -586,7 +586,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
                 setIsShapeDrawerOpen(true);
                 setIsModeDrawerOpen(false);
               }}
-              className="flex flex-col items-start p-3 sm:p-3.5 rounded-2xl bg-white hover:bg-amber-50/40 active:scale-98 border border-slate-200 hover:border-amber-400/50 shadow-2xs transition-all touch-manipulation cursor-pointer group text-left relative overflow-hidden"
+              className="flex flex-col items-start p-2.5 sm:p-3 rounded-2xl bg-white hover:bg-amber-50/40 active:scale-98 border border-slate-200 hover:border-amber-400/50 shadow-2xs transition-all touch-manipulation cursor-pointer group text-left relative overflow-hidden"
               title="点击切换盘面形态（方格、蜂巢、爱心、星芒等）"
             >
               <div className="flex items-center justify-between w-full mb-1">
@@ -616,7 +616,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
       {/* 2. Primary Action Card (处于最底部，严格坐落在 Tab 栏紧邻上方) */}
       <div
         className={`w-full bg-white rounded-2xl border border-slate-200 shadow-2xs transition-all ${
-          isPlaying ? 'p-2 sm:p-2.5' : 'p-3 sm:p-3.5 space-y-2'
+          isPlaying ? 'p-2 sm:p-2.5' : 'p-2.5 sm:p-3 space-y-1.5 sm:space-y-2'
         }`}
       >
         <div className="flex items-center gap-2">
@@ -626,7 +626,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
                 id="btn-start-training"
                 type="button"
                 onClick={onStart}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-98 text-slate-950 font-black shadow-sm transition-all text-base touch-manipulation cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-98 text-slate-950 font-black shadow-sm transition-all text-base touch-manipulation cursor-pointer"
               >
                 <Play className="w-5 h-5 fill-current" />
                 <span>开始训练</span>
@@ -638,7 +638,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
                 id="btn-daily-challenge-shortcut"
                 type="button"
                 onClick={onOpenDaily}
-                className={`flex items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-bold transition-all touch-manipulation border shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-2.5 sm:py-3 rounded-xl text-xs font-bold transition-all touch-manipulation border shrink-0 cursor-pointer ${
                   isDailyChallengeActive
                     ? 'bg-amber-500/15 border-amber-500/40 text-amber-900'
                     : 'bg-slate-50 hover:bg-amber-50 border-slate-200 text-slate-700 hover:text-amber-800'

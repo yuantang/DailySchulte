@@ -18,6 +18,7 @@ import { getPerformanceAssessment } from '../utils/analytics';
 import { MODE_NAMES } from './AnalyticsDashboard';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
+import appIconUrl from '../assets/app-icon.png';
 
 interface SharePosterModalProps {
   isOpen: boolean;
@@ -65,6 +66,20 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
     const height = 1520;
     canvas.width = width;
     canvas.height = height;
+
+    // Preload App Icon for high-res canvas drawing
+    let appIconImg: HTMLImageElement | null = null;
+    try {
+      appIconImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = appIconUrl;
+      });
+    } catch (e) {
+      console.warn('Poster icon load fallback', e);
+    }
 
     // 1. Background Theme styling
     if (theme === 'obsidian') {
@@ -116,29 +131,78 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
     const cardBg = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.7)';
     const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
 
-    // 2. Top Header Brand
+    // 2. Top Header Brand & App Identity
+    const iconSize = 64;
+    const brandName = '每日舒尔特';
+    ctx.font = 'bold 42px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const brandWidth = ctx.measureText(brandName).width;
+
+    const badgeText = '官方认证';
+    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const badgeWidth = ctx.measureText(badgeText).width + 24;
+
+    const brandSpacing = 16;
+    const badgeSpacing = 14;
+    const totalBrandWidth = (appIconImg ? iconSize + brandSpacing : 0) + brandWidth + badgeSpacing + badgeWidth;
+    const brandStartX = (width - totalBrandWidth) / 2;
+    const brandTopY = 64;
+
+    // A. Draw App Icon with rounded corners
+    if (appIconImg) {
+      ctx.save();
+      roundRect(ctx, brandStartX, brandTopY, iconSize, iconSize, 16);
+      ctx.clip();
+      ctx.drawImage(appIconImg, brandStartX, brandTopY, iconSize, iconSize);
+      ctx.restore();
+
+      // Border around icon
+      ctx.strokeStyle = accentColor;
+      ctx.lineWidth = 2;
+      roundRect(ctx, brandStartX, brandTopY, iconSize, iconSize, 16);
+      ctx.stroke();
+    }
+
+    // B. Draw App Name "每日舒尔特"
+    const textStartX = appIconImg ? brandStartX + iconSize + brandSpacing : brandStartX;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 42px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(brandName, textStartX, brandTopY + 48);
+
+    // C. Draw "官方认证" Pill Badge
+    const badgeX = textStartX + brandWidth + badgeSpacing;
+    const badgeY = brandTopY + 16;
+    ctx.fillStyle = isDark ? 'rgba(245, 158, 11, 0.18)' : 'rgba(217, 119, 6, 0.16)';
+    roundRect(ctx, badgeX, badgeY, badgeWidth, 34, 12);
+    ctx.fill();
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
     ctx.textAlign = 'center';
     ctx.fillStyle = accentColor;
-    ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('SCHULTE ATTENTION SYSTEM · 专注力认证报告', width / 2, 110);
+    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(badgeText, badgeX + badgeWidth / 2, badgeY + 23);
 
+    // D. Scientific Subtitle
+    ctx.textAlign = 'center';
     ctx.fillStyle = textSecondary;
     ctx.font = '22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('视知觉广角扫描与神经注意稳定性认证', width / 2, 148);
+    ctx.fillText('SCHULTE ATTENTION SYSTEM · 专注力神经效能认证', width / 2, brandTopY + 108);
 
     // 3. Session Tag Pill
     const tagText = `${record.size}×${record.size} 规格 · ${modeName} · ${record.totalTiles} 项任务`;
     ctx.fillStyle = isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(217, 119, 6, 0.12)';
     const tagWidth = ctx.measureText(tagText).width + 60;
-    roundRect(ctx, width / 2 - tagWidth / 2, 185, tagWidth, 48, 24);
+    roundRect(ctx, width / 2 - tagWidth / 2, 206, tagWidth, 46, 23);
     ctx.fill();
 
     ctx.fillStyle = accentColor;
     ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(tagText, width / 2, 217);
+    ctx.fillText(tagText, width / 2, 237);
 
     // 4. Hero Score Section (Big Card)
-    roundRect(ctx, 80, 270, width - 160, 310, 32);
+    roundRect(ctx, 80, 275, width - 160, 310, 32);
     ctx.fillStyle = cardBg;
     ctx.fill();
     ctx.strokeStyle = cardBorder;
@@ -269,29 +333,34 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
     ctx.fillText(`🔥 每日专注坚持：已连续训练打卡 ${streakCount} 天`, 120, adviceY + 120);
 
     // 8. Footer Timestamp & Verification Seal
-    const footerY = 1420;
+    const footerY = 1412;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = accentColor;
+    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('每日舒尔特 · 官方认知效能认证报告', 120, footerY);
+
     ctx.fillStyle = textSecondary;
-    ctx.font = '19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(`认证时间: ${record.dateFormatted}`, 120, footerY);
-    ctx.fillText(`记录编码: ${record.id.slice(0, 18)}`, 120, footerY + 28);
+    ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`认证时间: ${record.dateFormatted}    连续打卡: ${streakCount} 天`, 120, footerY + 28);
+    ctx.fillText(`记录编码: ${record.id.slice(0, 18)}    官网: dailyschulte.1024ideas.com`, 120, footerY + 54);
 
     // Stamp circle on right
     ctx.textAlign = 'center';
     const stampX = width - 170;
-    const stampY = footerY + 8;
+    const stampY = footerY + 20;
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
-    ctx.arc(stampX, stampY, 52, 0, Math.PI * 2);
+    ctx.arc(stampX, stampY, 56, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.fillStyle = accentColor;
     ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('SCHULTE', stampX, stampY - 14);
-    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('每日舒尔特', stampX, stampY - 16);
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('OFFICIAL', stampX, stampY + 4);
-    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('VERIFIED', stampX, stampY + 22);
+    ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('VERIFIED SEAL', stampX, stampY + 22);
 
     return canvas;
   };
@@ -506,11 +575,23 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             }`}
           >
             {/* Top Brand */}
-            <div className="text-center space-y-1">
-              <span className="text-[10px] font-black tracking-widest uppercase text-amber-500 block">
-                SCHULTE ATTENTION SYSTEM
-              </span>
-              <h4 className="text-xs font-bold opacity-80">专注力训练认证报告</h4>
+            <div className="flex flex-col items-center space-y-1.5 text-center">
+              <div className="flex items-center gap-1.5 justify-center">
+                <img
+                  src={appIconUrl}
+                  alt="每日舒尔特"
+                  className="w-5 h-5 rounded-md shadow-2xs shrink-0 object-cover"
+                />
+                <span className="text-sm font-black tracking-wide text-amber-500">
+                  每日舒尔特
+                </span>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                  官方认证
+                </span>
+              </div>
+              <h4 className="text-[10px] font-medium opacity-75">
+                专注力训练与神经效能认证报告
+              </h4>
               <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20">
                 <span>{record.size}×{record.size} 规格</span>
                 <span>·</span>
@@ -569,13 +650,16 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
             </div>
 
             {/* Footer Seal */}
-            <div className="pt-2 border-t border-current/10 flex items-center justify-between text-[9px] opacity-70">
+            <div className="pt-2 border-t border-current/10 flex items-center justify-between text-[9px] opacity-75">
               <div>
+                <p className="font-bold text-amber-500/90">每日舒尔特 · 官方认知测评</p>
                 <p>认证时间: {record.dateFormatted}</p>
                 <p>连续专注打卡: {streakCount} 天</p>
               </div>
-              <div className="w-10 h-10 rounded-full border-2 border-amber-500/80 flex items-center justify-center text-[8px] font-black text-amber-500 text-center leading-none">
-                SEAL
+              <div className="w-11 h-11 rounded-full border-2 border-amber-500/80 flex flex-col items-center justify-center text-amber-500 text-center leading-none p-0.5">
+                <span className="text-[8px] font-bold tracking-tight">每日舒尔特</span>
+                <span className="text-[7px] font-black scale-90 tracking-widest my-0.5">OFFICIAL</span>
+                <span className="text-[6px] opacity-80">VERIFIED</span>
               </div>
             </div>
           </div>

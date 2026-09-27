@@ -19,6 +19,7 @@ import { getPerformanceAssessment } from '../utils/analytics';
 import { MODE_NAMES } from './AnalyticsDashboard';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import appIconUrl from '../assets/app-icon.png';
 
 interface SharePosterModalProps {
@@ -389,6 +390,20 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
     ctx.closePath();
   }
 
+  // Helper: Write canvas image to temporary cache file and return local file:// URI
+  const saveCanvasToLocalFile = async (canvas: HTMLCanvasElement): Promise<string> => {
+    const dataUrl = canvas.toDataURL('image/png');
+    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+    const fileName = `daily-schulte-${record.size}x${record.size}-${timeSeconds}s-${Date.now()}.png`;
+
+    const saved = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Cache,
+    });
+    return saved.uri;
+  };
+
   // Handle Download Image (PNG)
   const handleDownload = async () => {
     try {
@@ -396,8 +411,30 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
       const canvas = await drawPosterOnCanvas();
       if (!canvas) throw new Error('Canvas not found');
 
+      // Native iOS Capacitor: write to cache and invoke native sheet with "Save Image" action
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const fileUri = await saveCanvasToLocalFile(canvas);
+          await Share.share({
+            title: '保存海报至相册',
+            files: [fileUri],
+            dialogTitle: '保存海报或发送',
+          });
+          showToast('请在弹出菜单中点击【存储图像】保存至相册！');
+        } catch {
+          // User dismissed share sheet
+        } finally {
+          setIsExporting(false);
+        }
+        return;
+      }
+
+      // Web Fallback: Blob URL download
       canvas.toBlob((blob) => {
-        if (!blob) return;
+        if (!blob) {
+          setIsExporting(false);
+          return;
+        }
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -405,13 +442,14 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         setIsExporting(false);
         showToast('海报图片已下载保存！');
       }, 'image/png');
-    } catch {
+    } catch (err) {
+      console.error('handleDownload error:', err);
       setIsExporting(false);
-      showToast('海报导出失败，请重试');
+      showToast('海报保存失败，请重试');
     }
   };
 
@@ -423,7 +461,10 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
       if (!canvas) throw new Error('Canvas not found');
 
       canvas.toBlob(async (blob) => {
-        if (!blob) return;
+        if (!blob) {
+          setIsExporting(false);
+          return;
+        }
         try {
           if (navigator.clipboard && navigator.clipboard.write) {
             await navigator.clipboard.write([
@@ -453,29 +494,32 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
       if (!canvas) throw new Error('Canvas not found');
 
       const title = `舒尔特专注力战报 · ${timeSeconds}秒`;
-      const text = `我刚在舒尔特专注力训练中以 ${timeSeconds} 秒完成了 ${record.size}×${record.size} 挑战，评级：${assessment.tier}！一起来测测你的反应速度！`;
+      const text = `我刚在「每日舒尔特」中以 ${timeSeconds} 秒完成了 ${record.size}×${record.size} 挑战，综合评级：${assessment.tier}！一起来测测你的注意力与视野广度！`;
 
-      // On native iOS Capacitor, invoke system share sheet directly
+      // On native iOS Capacitor, share the real image file instead of data: URI
       if (Capacitor.isNativePlatform()) {
         try {
-          const dataUrl = canvas.toDataURL('image/png');
+          const fileUri = await saveCanvasToLocalFile(canvas);
           await Share.share({
             title,
             text,
-            url: dataUrl,
+            files: [fileUri],
             dialogTitle: '分享战报到…',
           });
-          setIsExporting(false);
-          return;
         } catch {
           // If user cancelled, just stop exporting
+        } finally {
+          setIsExporting(false);
+        }
+        return;
+      }
+
+      // Web Share API fallback
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
           setIsExporting(false);
           return;
         }
-      }
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
         const file = new File([blob], 'schulte-poster.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
@@ -492,8 +536,10 @@ export const SharePosterModal: React.FC<SharePosterModalProps> = ({
         }
         setIsExporting(false);
       }, 'image/png');
-    } catch {
+    } catch (err) {
+      console.error('handleShare error:', err);
       setIsExporting(false);
+      showToast('分享组件启动失败，请使用保存功能');
     }
   };
 

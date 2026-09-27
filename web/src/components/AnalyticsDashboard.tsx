@@ -1889,18 +1889,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </div>
 
               {filteredSessions.length > 0 ? (
-                <div className="overflow-x-auto rounded-xl border border-slate-200/90 shadow-2xs bg-white">
-                  <table className="w-full min-w-[640px] text-left text-xs text-slate-700 divide-y divide-slate-100">
+                <div
+                  className="overflow-x-auto rounded-xl border border-slate-200/90 shadow-2xs bg-white"
+                  style={{ WebkitOverflowScrolling: 'touch' }}
+                >
+                  <table className="w-full min-w-[580px] text-left text-xs text-slate-700 divide-y divide-slate-100">
                     <thead className="bg-slate-50/90 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-100">
                       <tr>
-                        <th className="py-2.5 px-3.5 whitespace-nowrap font-medium text-[11px] w-[110px]">时间</th>
-                        <th className="py-2.5 px-3 whitespace-nowrap font-medium text-[11px] w-[90px]">规格</th>
-                        <th className="py-2.5 px-3 whitespace-nowrap font-medium text-[11px] w-[100px]">题型模式</th>
-                        <th className="py-2.5 px-3 whitespace-nowrap font-medium text-[11px] w-[90px]">完成总时</th>
-                        <th className="py-2.5 px-3 whitespace-nowrap font-medium text-[11px] w-[85px]">平均间隔</th>
-                        <th className="py-2.5 px-3 whitespace-nowrap font-medium text-[11px] w-[80px]">准确率</th>
-                        <th className="py-2.5 px-3 whitespace-nowrap font-medium text-[11px] w-[85px]">专注得分</th>
-                        <th className="py-2.5 px-3.5 whitespace-nowrap font-medium text-[11px] text-right w-[110px]">操作</th>
+                        <th className="py-2.5 px-2.5 whitespace-nowrap font-medium text-[11px] w-[80px]">时间</th>
+                        <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[75px]">规格</th>
+                        <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[80px]">题型模式</th>
+                        <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[70px]">完成总时</th>
+                        <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[65px]">平均间隔</th>
+                        <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[60px]">准确率</th>
+                        <th className="py-2.5 px-2 whitespace-nowrap font-medium text-[11px] w-[70px]">专注得分</th>
+                        <th className="py-2.5 px-2.5 whitespace-nowrap font-medium text-[11px] text-right w-[100px]">操作</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
@@ -1910,52 +1913,52 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                             key={s.id}
                             className="hover:bg-amber-50/40 transition-colors"
                           >
-                            <td className="py-2.5 px-3.5 whitespace-nowrap font-mono text-[11px] text-slate-500">
-                              {s.dateFormatted}
+                            <td className="py-2.5 px-2.5 whitespace-nowrap font-mono text-[11px] text-slate-500">
+                              {s.dateFormatted.slice(5)}
                             </td>
-                            <td className="py-2.5 px-3 whitespace-nowrap font-semibold">
+                            <td className="py-2.5 px-2 whitespace-nowrap font-semibold">
                               <span className="font-bold text-slate-900">{s.size}×{s.size}</span>
                               {s.isDailyChallenge && (
-                                <span className="ml-1.5 inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 whitespace-nowrap shrink-0">
+                                <span className="ml-1 inline-flex items-center text-[9px] px-1 py-0.2 rounded font-bold bg-amber-100 text-amber-800 whitespace-nowrap shrink-0">
                                   打卡
                                 </span>
                               )}
                             </td>
-                            <td className="py-2.5 px-3 whitespace-nowrap text-slate-700">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium text-[11px] whitespace-nowrap shrink-0">
+                            <td className="py-2.5 px-2 whitespace-nowrap text-slate-700">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium text-[11px] whitespace-nowrap shrink-0">
                                 {MODE_NAMES[s.mode] || s.mode}
                               </span>
                             </td>
-                            <td className="py-2.5 px-3 whitespace-nowrap font-mono font-bold text-slate-900">
+                            <td className="py-2.5 px-2 whitespace-nowrap font-mono font-bold text-slate-900">
                               {(s.totalTimeMs / 1000).toFixed(2)}s
                             </td>
-                            <td className="py-2.5 px-3 whitespace-nowrap font-mono text-slate-600">
+                            <td className="py-2.5 px-2 whitespace-nowrap font-mono text-slate-600">
                               {(s.averageTapMs / 1000).toFixed(2)}s
                             </td>
-                            <td className="py-2.5 px-3 whitespace-nowrap text-emerald-600 font-bold">
+                            <td className="py-2.5 px-2 whitespace-nowrap text-emerald-600 font-bold">
                               {s.accuracyRate.toFixed(1)}%
                             </td>
-                            <td className="py-2.5 px-3 whitespace-nowrap">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60 font-bold text-[11px] whitespace-nowrap shrink-0">
+                            <td className="py-2.5 px-2 whitespace-nowrap">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60 font-bold text-[11px] whitespace-nowrap shrink-0">
                                 {s.metrics.overallScore}分
                               </span>
                             </td>
-                            <td className="py-2.5 px-3.5 whitespace-nowrap text-right">
-                              <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                            <td className="py-2.5 px-2.5 whitespace-nowrap text-right">
+                              <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setSelectedSessionId(s.id);
                                     setActiveTab('session');
                                   }}
-                                  className="px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-[11px] transition-colors cursor-pointer shrink-0"
+                                  className="px-1.5 py-0.8 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-[11px] transition-colors cursor-pointer shrink-0"
                                 >
                                   复盘
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setPosterRecord(s)}
-                                  className="px-2 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1 shadow-2xs shrink-0"
+                                  className="px-1.5 py-0.8 rounded-md bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-0.5 shadow-2xs shrink-0"
                                   title="导出该次成绩海报"
                                 >
                                   <Sparkles className="w-3 h-3" />
